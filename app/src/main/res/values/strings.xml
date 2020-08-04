@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Temporizador Remoto</string>
+    <string name="title_activity_modo_display">ModoDisplay</string>
+    <string name="title_activity_modo_controle">ModoControle</string>
+</resources>
