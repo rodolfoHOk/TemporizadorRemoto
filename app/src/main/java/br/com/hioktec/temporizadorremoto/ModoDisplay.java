@@ -474,6 +474,7 @@ public class ModoDisplay extends AppCompatActivity {
                         /* testar autenticidade */
                         if(senhaDigitada.getText().toString().equals(senha)){
                             Intent intentConfig = new Intent(view.getContext(), Configuracoes.class);
+                            intentConfig.putExtra("modoSolo", false);
                             startActivity(intentConfig);
                         } else{
                             senhaDigitada.setText("");

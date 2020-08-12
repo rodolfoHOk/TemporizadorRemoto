@@ -82,7 +82,7 @@ public class ModoControle extends AppCompatActivity {
     private static SharedPreferences sharedPreferences;
     public static final String PREFS_NAME = "dados_salvos";
 
-    private static boolean parar = false;
+    private static boolean parado = true;
     public static boolean foiPedidoIniciado = false;
 
     private static Context context;
@@ -137,6 +137,12 @@ public class ModoControle extends AppCompatActivity {
                         textStatusControle.setText(mensagem);
                         if(mensagem.contains("mudou")) {
                             duracaoAlarme = Integer.parseInt(mensagem.substring(mensagem.indexOf("para") +5, mensagem.indexOf("min") -1));
+                            if(!parado && iniciados.size() > 0) {
+                                contadorNotificacoes = (int) ((Calendar.getInstance().getTimeInMillis() - iniciados.get(0).getData()) / (duracaoAlarme * 60 * 1000)) + 1;
+                                if (contadorNotificacoes == 1 || multiAlarmes) {
+                                    iniciarAlarme();
+                                }
+                            }
                             textDuracao.setText(duracaoAlarme + " min");
                             SharedPreferences.Editor editor = sharedPreferences.edit();
                             editor.putInt("duracao", duracaoAlarme);
@@ -171,7 +177,7 @@ public class ModoControle extends AppCompatActivity {
                         foiPedidoIniciado = false;
                     }
                     else if (mensagem.equals("parado")){
-                        parar = true;
+                        parado = true;
                         cancelarAlarme();
                         textStatusControle.setText("Temporizador parado!");
                     }
@@ -334,7 +340,7 @@ public class ModoControle extends AppCompatActivity {
         @SuppressLint("DefaultLocale")
         @Override
         public void run() {
-            if (!parar && iniciados.size() > 0) {
+            if (!parado && iniciados.size() > 0) {
                 long iniciadoData = iniciados.get(0).getData();
                 long agoraData = Calendar.getInstance().getTimeInMillis();
                 long tempo = (agoraData - iniciadoData) / 1000;
@@ -382,7 +388,7 @@ public class ModoControle extends AppCompatActivity {
                                                 .setPositiveButton("Sim", new DialogInterface.OnClickListener() {
                                                     @Override
                                                     public void onClick(DialogInterface dialog, int which) {
-                                                        parar = true;
+                                                        parado = true;
                                                         cancelarAlarme();
                                                         textStatusControle.setText("Temporizador local parado!");
                                                     }
@@ -552,7 +558,7 @@ public class ModoControle extends AppCompatActivity {
             PendingIntent alarmeIntent = PendingIntent.getBroadcast(context, pendingIntentRequestCode, intentBroadcast, PendingIntent.FLAG_UPDATE_CURRENT);
             alarmManager.setExact(AlarmManager.RTC_WAKEUP, alarmeData, alarmeIntent);
 
-            parar = false;
+            parado = false;
             tempoAproximado.run();
         }
     }
@@ -619,6 +625,7 @@ public class ModoControle extends AppCompatActivity {
                         /* testar autenticidade */
                         if(senhaDigitada.getText().toString().equals(senha)){
                             Intent intentConfig = new Intent(view.getContext(), Configuracoes.class);
+                            intentConfig.putExtra("modoSolo", false);
                             startActivity(intentConfig);
                         } else{
                             senhaDigitada.setText("");
@@ -726,7 +733,6 @@ public class ModoControle extends AppCompatActivity {
                 .setPositiveButton("Sim", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        cancelarAlarme();
                         ModoControle.super.onBackPressed();
                     }
                 })
@@ -738,6 +744,7 @@ public class ModoControle extends AppCompatActivity {
     protected void onDestroy() {
         // necessário desregistar o broadcastreceiver
         unregisterReceiver(mReceiver);
+        cancelarAlarme();
         super.onDestroy();
     }
 }

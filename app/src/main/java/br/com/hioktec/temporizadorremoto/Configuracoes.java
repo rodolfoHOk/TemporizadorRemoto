@@ -51,6 +51,8 @@ public class Configuracoes extends AppCompatActivity {
     private static SharedPreferences sharedPreferences;
     private static boolean doSharedPref = false;
 
+    private static boolean modoSolo = false;
+
     /* BroadcastReceiver - para receber intent do modo controle */
     public BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
@@ -66,7 +68,10 @@ public class Configuracoes extends AppCompatActivity {
         setContentView(R.layout.activity_configuracoes);
         this.setTitle("Temporizador Remoto - Configurações");
 
-        /* iniciar componentes da view */
+        // resgata valor modoSolo
+        modoSolo = getIntent().getBooleanExtra("modoSolo", false);
+
+        // iniciar componentes da view
         textStatusConfig = findViewById(R.id.textStatusConfig);
         textMACDispositivo = findViewById(R.id.textMACDispositivo);
 
@@ -76,7 +81,11 @@ public class Configuracoes extends AppCompatActivity {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if (event.getKeyCode() == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN) {
-                    enviarDuracao(editTextDuracao.getText().toString());
+                    if(modoSolo){
+                        mudarDuracao(editTextDuracao.getText().toString());
+                    } else {
+                        enviarDuracao(editTextDuracao.getText().toString());
+                    }
                 }
                 return false;
             }
@@ -90,20 +99,35 @@ public class Configuracoes extends AppCompatActivity {
                 String enviar;
                 if(!doSharedPref){
                     if (switchMultiplos.isChecked()) {
-                        if (gerenciadorConexao != null) {
-                            enviar = "multiplosTrue";
-                            gerenciadorConexao.write(enviar.getBytes());
+                        if(!modoSolo) {
+                            if (gerenciadorConexao != null) {
+                                enviar = "multiplosTrue";
+                                gerenciadorConexao.write(enviar.getBytes());
+                            } else {
+                                switchMultiplos.setChecked(false);
+                                toastNaoConectado();
+                            }
                         } else {
-                            switchMultiplos.setChecked(false);
-                            toastNaoConectado();
+                            String mensagem = "multiplos ligado";
+                            Intent intentMensagemSolo = new Intent("mensagemModoSolo");
+                            intentMensagemSolo.putExtra("mensagemSolo", mensagem);
+                            System.out.println("config: " + mensagem);
+                            LocalBroadcastManager.getInstance(context).sendBroadcast(intentMensagemSolo);
                         }
                     } else if (!switchMultiplos.isChecked()){
-                        if (gerenciadorConexao != null) {
-                            enviar = "multiplosFalse";
-                            gerenciadorConexao.write(enviar.getBytes());
+                        if(!modoSolo) {
+                            if (gerenciadorConexao != null) {
+                                enviar = "multiplosFalse";
+                                gerenciadorConexao.write(enviar.getBytes());
+                            } else {
+                                switchMultiplos.setChecked(true);
+                                toastNaoConectado();
+                            }
                         } else {
-                            switchMultiplos.setChecked(true);
-                            toastNaoConectado();
+                            String mensagem = "multiplos desligado";
+                            Intent intentMensagemSolo = new Intent("mensagemModoSolo");
+                            intentMensagemSolo.putExtra("mensagemSolo", mensagem);
+                            LocalBroadcastManager.getInstance(context).sendBroadcast(intentMensagemSolo);
                         }
                     }
                 } else {
@@ -211,6 +235,27 @@ public class Configuracoes extends AppCompatActivity {
                         } else {
                             toastNaoConectado();
                         }
+                    }
+                })
+                .setNegativeButton("Não", null)
+                .show();
+    }
+
+    /**
+     * pede para o modo solo mudar a duração do temporizador
+     * @param duracao
+     */
+    private void mudarDuracao(final String duracao) {
+        new AlertDialog.Builder(this)
+                .setMessage("Confirma mudar duração para " + duracao + "min?")
+                .setCancelable(false)
+                .setPositiveButton("Sim", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String mensagem = "mudar duração para " + duracao + " min!";
+                        Intent intentMensagemSolo = new Intent("mensagemModoSolo");
+                        intentMensagemSolo.putExtra("mensagemSolo", mensagem);
+                        LocalBroadcastManager.getInstance(context).sendBroadcast(intentMensagemSolo);
                     }
                 })
                 .setNegativeButton("Não", null)

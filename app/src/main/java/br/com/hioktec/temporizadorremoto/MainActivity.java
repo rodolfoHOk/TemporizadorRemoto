@@ -17,14 +17,21 @@ public class MainActivity extends AppCompatActivity {
     public void paraModoDisplay(View view){
         Intent intentModoDisplay = new Intent(this,ModoDisplay.class);
         startActivity(intentModoDisplay);
-        /* termina activity - para não poder voltar mais para ela */
+        // termina activity - para não poder voltar mais para ela */
         this.finish();
     }
 
     public void paraModoControle(View view){
         Intent intentModoControle = new Intent(this, ModoControle.class);
         startActivity(intentModoControle);
-        /* termina activity - para não poder voltar mais para ela */
+        // termina activity - para não poder voltar mais para ela */
+        this.finish();
+    }
+
+    public void paraModoSolo(View view){
+        Intent intentModoSolo= new Intent(this, ModoSolo.class);
+        startActivity(intentModoSolo);
+        // termina activity - para não poder voltar mais para ela */
         this.finish();
     }
 }
